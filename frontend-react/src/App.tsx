@@ -1,35 +1,57 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// src/App.tsx
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { userManager } from "./auth/UserManager";
+import { useEffect, useState } from "react";
 
-function App() {
-  const [count, setCount] = useState(0)
+function CallbackPage() {
+  useEffect(() => {
+    userManager.signinRedirectCallback().then(() => {
+      window.location.href = "/";
+    }).catch((error) => {
+      console.error("Callback error", error);
+    });
+  }, []);
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+  return <p>Processing login...</p>;
 }
 
-export default App
+function HomePage() {
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    userManager.getUser().then(setUser);
+  }, []);
+
+  const login = () => {
+    userManager.signinRedirect();
+  };
+
+  const logout = () => {
+    userManager.signoutRedirect();
+  };
+
+  return (
+    <div>
+      <h1>Financial Health Dashboard</h1>
+      {user ? (
+        <>
+          <p>Welcome, {user.profile.email}</p>
+          <button onClick={logout}>Logout</button>
+        </>
+      ) : (
+        <button onClick={login}>Login</button>
+      )}
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/callback" element={<CallbackPage />} />
+      </Routes>
+    </Router>
+  );
+}
